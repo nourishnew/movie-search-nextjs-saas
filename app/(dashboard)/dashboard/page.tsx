@@ -6,9 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { formSchema } from "./constants";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { MovieCard } from "@/components/movie-card";
 
 interface Movie {
@@ -18,10 +18,16 @@ interface Movie {
 	Type: string;
 	imdbID: string;
 }
+interface FavMovie {
+	id: string;
+	movieId: string;
+	userId: string;
+}
 
 const DashboardPage = () => {
 	const [isMounted, setIsMounted] = useState(false);
 	const [movies, setMovies] = useState<Movie[]>([]);
+	const [favMovies, setFavMovies] = useState<FavMovie[]>([]);
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -42,9 +48,16 @@ const DashboardPage = () => {
 		} finally {
 		}
 	};
+
 	useEffect(() => {
+		const fetchFavoriteMovies = async () => {
+			const response = await axios.get("/api/fetchFavorites");
+			setFavMovies(response.data);
+		};
+		fetchFavoriteMovies();
 		setIsMounted(true);
 	}, []);
+
 	if (!isMounted) {
 		return null;
 	}
@@ -93,6 +106,9 @@ const DashboardPage = () => {
 							title={movie.Title}
 							year={movie.Year}
 							imageUrl={movie.Poster}
+							isFavorite={favMovies.some(
+								(favMovie) => favMovie.movieId === movie.imdbID
+							)}
 						/>
 					))}
 				</div>
